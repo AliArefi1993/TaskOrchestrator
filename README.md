@@ -19,3 +19,9 @@ Then you can access the swagger documentations in
 ```
 http://127.0.0.1:8000/docs
 ```
+
+Run RabbitMQ message brocker
+
+```
+docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3-management
+```
