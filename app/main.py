@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, HTTPException, BackgroundTasks, Request
+from fastapi import FastAPI, UploadFile, BackgroundTasks, status
 from app.tasks import asr_task, translation_task
 import threading
 import json
@@ -6,7 +6,7 @@ app = FastAPI()
 
 current_transcription = None  # Shared variable to hold transcription result
 
-@app.post("/process-audio/")
+@app.post("/process-audio/", status_code=status.HTTP_202_ACCEPTED)
 async def process_audio(file: UploadFile, background_tasks: BackgroundTasks):
     
     audio_data = await file.read()
