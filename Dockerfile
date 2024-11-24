@@ -1,10 +1,18 @@
 FROM python:3.10-slim
 
+# Install Poetry and configure it
+RUN pip install poetry \
+    && poetry config virtualenvs.in-project true
+
+# Set up working directory
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip install -r requirements.txt
+# Copy dependency files and install dependencies
+COPY pyproject.toml poetry.lock* /app/
+RUN poetry install --no-root
 
-COPY . .
+# Copy the rest of the application code
+COPY . /app/
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run the application
+CMD ["poetry", "run", "python", "app/main.py"]
