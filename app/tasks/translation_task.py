@@ -1,15 +1,23 @@
-from faststream.rabbit import RabbitBroker
-from config import RABBITMQ_HOST, TRANSLATION_QUEUE, TRANSLATION_RESULT
+from faststream.rabbit import RabbitBroker, RabbitMessage
+from faststream import FastStream
 
-broker = RabbitBroker(f"amqp://guest:guest@{RABBITMQ_HOST}/")
+from config import RABBITMQ_HOST, RESPONSE_QUEUE
+import json
 
-async def send_text_to_translation(asr_text: str):
-    await broker.publish(
-        message=asr_text,
-        routing_key=TRANSLATION_QUEUE
-    )
+def queue_listener():
+    broker = RabbitBroker(url=f"amqp://{RABBITMQ_HOST}")
+    app = FastStream(broker)
+    
+    @broker.subscriber(RESPONSE_QUEUE)
+    async def process_translation_request(message: RabbitMessage):
+        global current_transcription
+        try:
+            message_data = message.body
+            message_json = json.loads(message_data)
+            text_to_translate = message_json.get("translated_text", "")
+            current_transcription = text_to_translate
+            print('current_transcription=', current_transcription)
 
-async def retrieve_translation_response(callback):
-    @broker.subscriber(TRANSLATION_RESULT)
-    async def on_message(message: str):
-        await callback(message)
+        except Exception as e:
+            print(f"Error processing translation request: {e}")
+    return app, broker
