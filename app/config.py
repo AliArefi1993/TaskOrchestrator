@@ -8,3 +8,4 @@ ASR_QUEUE = "asr_task_queue"
 TRANSLATION_QUEUE = "translation_task_queue"
 RESPONSE_QUEUE = "response_queue"
 TRANSLATION_RESULT = "translation_result"
+ENABLE_CHUNK_AUDIO = True

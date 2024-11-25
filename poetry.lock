@@ -644,6 +644,17 @@ files = [
 typing-extensions = ">=4.6.0,<4.7.0 || >4.7.0"
 
 [[package]]
+name = "pydub"
+version = "0.25.1"
+description = "Manipulate audio with an simple and easy high level interface"
+optional = false
+python-versions = "*"
+files = [
+    {file = "pydub-0.25.1-py2.py3-none-any.whl", hash = "sha256:65617e33033874b59d87db603aa1ed450633288aefead953b30bded59cb599a6"},
+    {file = "pydub-0.25.1.tar.gz", hash = "sha256:980a33ce9949cab2a569606b65674d748ecbca4f0796887fd6f46173a7b0d30f"},
+]
+
+[[package]]
 name = "pymongo"
 version = "4.9.2"
 description = "Python driver for MongoDB <http://www.mongodb.org>"
@@ -903,4 +914,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "506b4236e9937ae92fe0632fdcc5f40ff468fde80451d8ab111d9142e5b76071"
+content-hash = "06a8164163622ae40302dcf9dc0e26bc236269ffd9f0f8ebc702610d9d0c1631"

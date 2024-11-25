@@ -5,6 +5,7 @@ from typing import Optional
 class Transcription(BaseModel):
     status: str
     result: Optional[str] = None
+    chain: int
 
     class Settings:
         collection = "transcriptions"  # MongoDB collection name

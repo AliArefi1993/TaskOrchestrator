@@ -5,6 +5,7 @@ from tasks import asr_task
 from tasks.translation_task import queue_listener
 from config_db import init_db
 from models.transcription import TranscriptionDocument
+from helpers.translation_result import get_concatenated_transcription_results
 
 
 faststream_app, broker = queue_listener()
@@ -25,11 +26,15 @@ async def process_audio(file: UploadFile):
 
     # Send audio to ASR service via RabbitMQ
     broker.connect()
-    await asr_task.send_audio_to_asr(audio_data, broker)
+    chunk_files = await asr_task.chunck_audio_file_base_on_silence(audio_data)
+    for i, chunk in enumerate(chunk_files):
+        await asr_task.send_audio_to_asr(chunk, i, broker)
+        transcription = TranscriptionDocument(status="processing", chain=i)
+        await transcription.insert()
 
-    # Create a new transcription document in MongoDB
-    transcription = TranscriptionDocument(status="processing")
-    await transcription.insert()
+    print(f'{i} number of chunks created and ready to ASR.')
+
+    await TranscriptionDocument.find_one({'status':'processing'})
 
     return {"status": "Processing started"}
 
@@ -37,13 +42,16 @@ async def process_audio(file: UploadFile):
 async def get_result():
     # Fetch the transcription document from MongoDB by its ID
     transcription = await TranscriptionDocument.find_one({})
+    processing_transcription = await TranscriptionDocument.find_one({'status':'processing'})
     
     if transcription is None:
         return {"status": "not_found", "result": None}
-    
+    elif processing_transcription:
+        return {"status": "processing", "result": None}
+    concatenated_result = await get_concatenated_transcription_results()
     return {
-        "status": transcription.status,
-        "result": transcription.result
+        "status": 'completed',
+        "result": concatenated_result
     }
 
 

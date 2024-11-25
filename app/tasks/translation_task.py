@@ -14,11 +14,12 @@ def queue_listener():
             message_data = message.body
             message_json = json.loads(message_data)
             text_to_translate = message_json.get("translated_text", "")
+            chain = message_json.get("chain", "")
 
             # Query a document
-            transcription = await TranscriptionDocument.find_one(TranscriptionDocument.status=='processing')
+            transcription = await TranscriptionDocument.find_one({'status':'processing', 'chain':chain})
 
-            # Update a document
+            # # Update a document
             transcription.status = "completed"
             transcription.result = text_to_translate
             await transcription.save()
