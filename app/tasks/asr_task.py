@@ -5,7 +5,6 @@ import io, json
 from uuid import UUID
 
 async def send_audio_to_asr(request_id: UUID, audio_data: bytes, chain: int, broker):
-    broker.connect()
     binary_data = audio_data.read()
     message = json.dumps({
         "audio_data": binary_data.decode('latin1'),

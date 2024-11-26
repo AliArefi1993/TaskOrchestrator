@@ -2,7 +2,7 @@ import asyncio
 import uvicorn
 import uuid
 from typing import Optional
-from fastapi import FastAPI, UploadFile, Query, status
+from fastapi import FastAPI, UploadFile, Query, status, File
 from tasks import asr_task
 from tasks.translation_task import queue_listener
 from config_db import init_db
@@ -21,12 +21,10 @@ async def on_startup():
     await TranscriptionDocument.delete_all()    
 
 @fastapi_app.post("/process-audio/", status_code=status.HTTP_202_ACCEPTED)
-async def process_audio(file: UploadFile):
+async def process_audio(file: UploadFile = File(...)):
     request_id = uuid.uuid4()
     audio_data = await file.read()
 
-    # Send audio to ASR service via RabbitMQ
-    broker.connect()
     chunk_files = await asr_task.chunck_audio_file_base_on_silence(audio_data)
     for i, chunk in enumerate(chunk_files):
         await asr_task.send_audio_to_asr(request_id, chunk, i, broker)
