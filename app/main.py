@@ -2,13 +2,17 @@ import asyncio
 import uvicorn
 import uuid
 from typing import Optional
-from fastapi import FastAPI, UploadFile, Query, status, File
+from fastapi import FastAPI, UploadFile, Query, status, File, BackgroundTasks
 from tasks import asr_task
 from tasks.translation_task import queue_listener
 from config_db import init_db
 from models.transcription import TranscriptionDocument
 from helpers.translation_result import get_concatenated_transcription_results
 from config import ENABLE_CHUNK_AUDIO
+import logging
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 faststream_app, broker = queue_listener()
 
@@ -21,21 +25,11 @@ async def on_startup():
     await TranscriptionDocument.delete_all()    
 
 @fastapi_app.post("/process-audio/", status_code=status.HTTP_202_ACCEPTED)
-async def process_audio(file: UploadFile = File(...)):
+async def process_audio(file: UploadFile = File(...), background_tasks: BackgroundTasks = None):
     request_id = uuid.uuid4()
     audio_data = await file.read()
-    if ENABLE_CHUNK_AUDIO:
-        chunk_files = await asr_task.chunck_audio_file_base_on_silence(audio_data)
-    else:
-        chunk_files = [audio_data]
-    
-    for i, chunk in enumerate(chunk_files):
-        await asr_task.send_audio_to_asr(request_id, chunk, i, broker)
-        transcription = TranscriptionDocument(status="processing", chain=i, request_id=request_id)
-        await transcription.insert()
-
-    print(f'{i+1} number of chunks created and ready to ASR.')
-
+    background_tasks.add_task(asr_task.handel_asr, audio_data, request_id, broker)
+    logger.info(f'request id is: {request_id}')
     return {"status": "Processing started", "request_id": request_id}
 
 @fastapi_app.get("/result/")
