@@ -8,7 +8,7 @@ from tasks.translation_task import queue_listener
 from config_db import init_db
 from models.transcription import TranscriptionDocument
 from helpers.translation_result import get_concatenated_transcription_results
-
+from config import ENABLE_CHUNK_AUDIO
 
 faststream_app, broker = queue_listener()
 
@@ -24,8 +24,11 @@ async def on_startup():
 async def process_audio(file: UploadFile = File(...)):
     request_id = uuid.uuid4()
     audio_data = await file.read()
-
-    chunk_files = await asr_task.chunck_audio_file_base_on_silence(audio_data)
+    if ENABLE_CHUNK_AUDIO:
+        chunk_files = await asr_task.chunck_audio_file_base_on_silence(audio_data)
+    else:
+        chunk_files = [audio_data]
+    
     for i, chunk in enumerate(chunk_files):
         await asr_task.send_audio_to_asr(request_id, chunk, i, broker)
         transcription = TranscriptionDocument(status="processing", chain=i, request_id=request_id)
