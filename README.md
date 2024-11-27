@@ -3,3 +3,9 @@ Managing and directing tasks across the ASR and translation services, making it 
 
 ## Settings
 Check and update app/config.py in orther to manage settings 
+
+### Documentation
+You can access the swagger documentations in
+```
+http://127.0.0.1:8000/docs
+```
