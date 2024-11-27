@@ -1,6 +1,6 @@
 from faststream.rabbit import RabbitBroker, RabbitMessage
 from faststream import FastStream
-from config import RABBITMQ_HOST, RESPONSE_QUEUE
+from config import RABBITMQ_HOST, RESPONSE_QUEUE, RABBITMQ_USER, RABBITMQ_PASSWORD
 from models.transcription import TranscriptionDocument
 import json, logging
 from uuid import UUID
@@ -8,7 +8,7 @@ from uuid import UUID
 logger = logging.getLogger(__name__)
 
 def queue_listener():
-    broker = RabbitBroker(url=f"amqp://{RABBITMQ_HOST}")
+    broker = RabbitBroker(url=f"amqp://{RABBITMQ_USER}:{RABBITMQ_PASSWORD}@{RABBITMQ_HOST}")
     app = FastStream(broker)
     
     @broker.subscriber(RESPONSE_QUEUE)
