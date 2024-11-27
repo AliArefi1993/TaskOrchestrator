@@ -1,9 +1,24 @@
 from config import ENABLE_CHUNK_AUDIO, ASR_QUEUE
 from pydub import AudioSegment
 from pydub.silence import split_on_silence
-import io, json
+import io, json, logging
 from uuid import UUID
+from models.transcription import TranscriptionDocument
 
+logger = logging.getLogger(__name__)  # Use the same logger instance
+
+async def handel_asr(audio_data, request_id, broker):
+    if ENABLE_CHUNK_AUDIO:
+        chunk_files = await chunck_audio_file_base_on_silence(audio_data)
+    else:
+        chunk_files = [audio_data]
+    
+    for i, chunk in enumerate(chunk_files):
+        await send_audio_to_asr(request_id, chunk, i, broker)
+        transcription = TranscriptionDocument(status="processing", chain=i, request_id=request_id)
+        await transcription.insert()
+    logger.info(f'{i+1} number of chunks created and ready to ASR.')
+    
 async def send_audio_to_asr(request_id: UUID, audio_data: bytes, chain: int, broker):
     message = json.dumps({
         "audio_data": audio_data.decode('latin1'),
